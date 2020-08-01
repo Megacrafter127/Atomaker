@@ -1,4 +1,4 @@
-name: C/C++ CI
+name: Build
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [ master ]
 
 jobs:
-  build:
+  build-linux:
 
     runs-on: ubuntu-latest
 
@@ -15,3 +15,8 @@ jobs:
     - uses: actions/checkout@v2
     - name: make
       run: make
+    - name: artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: Atomaker-Linux
+        path: Atomaker
