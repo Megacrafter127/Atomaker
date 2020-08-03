@@ -1,6 +1,6 @@
 all: Atomaker
 
-%.d: %.cpp 
+%.d: %.cpp makefile
 	$(CXX) $(CXXFLAGS) -MM -o $@ $<
 
 -include main.d
@@ -14,4 +14,4 @@ Atomaker: $(OBJECTS) $(LDLIBS)
 clean:
 	$(RM) $(OBJECTS)
 .PHONY: clean all
-.INTERMEDIATE: $(OBJECTS)
+.SECONDARY: $(OBJECTS:%.o=%.d %.o)

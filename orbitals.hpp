@@ -13,9 +13,15 @@ template<typename T> struct orbital {
 	typedef T scalar;
 	unsigned n=0; //0<=n //principal quantum number -1
 	unsigned l=0; //l<=n //
-	bool s=false; //false=-1/2;true=1/2
 	int m_l=-l; //-l<=m_l<=l
-	constexpr orbital(unsigned n, unsigned l, bool s, int m_l) :
+	bool s=false; //false=-1/2;true=1/2
+	typedef enum {
+		SHELL,
+		SUBSHELL,
+		PAIR,
+		INDIVIDUAL
+	} orbitalGroup;
+	constexpr orbital(unsigned n, unsigned l, int m_l, bool s) :
 					n(n), l(l), s(s), m_l(m_l) {}
 	constexpr orbital()=default;
 	constexpr orbital(const orbital&)=default;
@@ -62,13 +68,52 @@ template<typename T> struct orbital {
 	constexpr bool operator<(const orbital<scalar> &other) const noexcept {
 		if(n!=other.n) return n<other.n;
 		else if(l!=other.l) return l<other.l;
-		else if(s!=other.s) return s<other.s;
-		else return m_l<other.m_l;
+		else if(m_l!=other.m_l)return m_l<other.m_l;
+		else return s<other.s;
+	}
+	template<orbitalGroup group> constexpr bool sameGroup(const orbital &other) const noexcept {
+		switch(group) {
+		default:
+		case INDIVIDUAL:
+			if(s!=other.s) return false;
+		case PAIR:
+			if(m_l!=other.m_l) return false;
+		case SUBSHELL:
+			if(l!=other.l) return false;
+		case SHELL:
+			return n==other.n;
+		};
+	}
+	template<orbitalGroup group> constexpr orbital lower_limit() const noexcept {
+		switch(group) {
+		default:
+		case INDIVIDUAL:
+			return *this;
+		case PAIR:
+			return orbital(n,l,m_l,false);
+		case SUBSHELL:
+			return orbital(n,l,-l,false);
+		case SHELL:
+			return orbital(n,0,0,false);
+		}
+	}
+	template<orbitalGroup group> constexpr orbital upper_limit() const noexcept {
+		switch(group) {
+		default:
+		case INDIVIDUAL:
+			return *this;
+		case PAIR:
+			return orbital(n,l,m_l,true);
+		case SUBSHELL:
+			return orbital(n,l,l,true);
+		case SHELL:
+			return orbital(n,n,n,true);
+		}
 	}
 	constexpr bool valid() const noexcept {
 		return l<=n && absu(m_l)<=l;
 	}
-	orbital &operator++() noexcept {
+	constexpr orbital &operator++() noexcept {
 		s=!s;
 		if(!s) {
 			m_l++;
@@ -83,7 +128,7 @@ template<typename T> struct orbital {
 		}
 		return *this;
 	}
-	orbital &operator--() noexcept {
+	constexpr orbital &operator--() noexcept {
 		s=!s;
 		if(s) {
 			m_l--;
@@ -99,12 +144,12 @@ template<typename T> struct orbital {
 		}
 		return *this;
 	}
-	inline orbital operator++(int) noexcept {
+	constexpr inline orbital operator++(int) noexcept {
 		orbital cpy=*this;
 		this->operator++();
 		return cpy;
 	}
-	orbital operator--(int) noexcept {
+	constexpr orbital operator--(int) noexcept {
 		orbital cpy=*this;
 		this->operator--();
 		return cpy;

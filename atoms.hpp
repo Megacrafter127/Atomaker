@@ -10,6 +10,7 @@
 #include "orbitals.hpp"
 
 #include <set>
+#include <map>
 
 template<typename T> struct atom {
 	const unsigned Z; //number of protons in nucleus
@@ -22,7 +23,7 @@ template<typename T> struct atom {
 		orbitals.insert(swap.second);
 	}
 	
-	constexpr T S(const orbital<T> &orb, const orbital<T> &exclude=orbital<T>(-1,-1,false,0)) const { //compute total shielding effect for a given orbital. an orbital can be excluded from the computation
+	constexpr T S(const orbital<T> &orb, const orbital<T> &exclude=orbital<T>(-1,-1,0,false)) const { //compute total shielding effect for a given orbital. an orbital can be excluded from the computation
 		T ret=0;
 		for(auto i=orbitals.cbegin();i!=orbitals.cend();i++) {
 			 if(*i!=exclude) ret+=orb.S_i(*i);
@@ -30,7 +31,7 @@ template<typename T> struct atom {
 		return ret;
 	}
 	
-	constexpr T B(const constants<T> &c, const orbital<T> &exclude=orbital<T>(-1,-1,false,0)) const { //compute total magnetic field in the Z direction
+	constexpr T B(const constants<T> &c, const orbital<T> &exclude=orbital<T>(-1,-1,0,false)) const { //compute total magnetic field in the Z direction
 		T ret=0;
 		for(auto i=orbitals.cbegin();i!=orbitals.cend();i++) {
 			if(*i!=exclude) ret+=i->B(c,Z-S(*i,exclude));
@@ -38,7 +39,7 @@ template<typename T> struct atom {
 		return ret;
 	}
 	
-	constexpr T E_i(const constants<T> &c, const orbital<T> &orb, const orbital<T> &exclude=orbital<T>(-1,-1,false,0)) const { //compute energy level of a given orbital. an orbital can be excluded from affecting the calculations
+	constexpr T E_i(const constants<T> &c, const orbital<T> &orb, const orbital<T> &exclude=orbital<T>(-1,-1,0,false)) const { //compute energy level of a given orbital. an orbital can be excluded from affecting the calculations
 		const T B=0;//this->B(c,orb);
 		return orb.E(c,Z-S(orb,exclude),B);
 	}
@@ -84,14 +85,28 @@ template<typename T> struct atom {
 				return std::make_pair(old,res);
 			}
 		}
-		return std::make_pair(orbital<T>(-1,-1,false,0),orbital<T>(-1,-1,false,0));
+		return std::make_pair(orbital<T>(-1,-1,0,false),orbital<T>(-1,-1,0,false));
 	}
 	
 	orbital<T> populate(const constants<T> &c) { //add an electron to the atom
-		constexpr orbital<T> free=orbital<T>(-1,-1,false,0);
+		constexpr orbital<T> free=orbital<T>(-1,-1,0,false);
 		const orbital<T> ret=reseatSpot(c,free);
 		if(ret==free) return free;
 		orbitals.insert(ret);
+		return ret;
+	}
+	
+	constexpr std::set<orbital<T>> valenceOrbitals() const {
+		std::set<orbital<T>> ret;
+		std::map<unsigned,unsigned> max;
+		for(auto i=orbitals.crbegin();i!=orbitals.crend();i++) {
+			if(max[i->l]==0) {
+				max[i->l]=i->n+1;
+			}
+			if(max[i->l]==i->n+1) {
+				ret.insert(*i);
+			}
+		}
 		return ret;
 	}
 };

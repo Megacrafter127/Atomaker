@@ -36,7 +36,7 @@ template<typename T> void orbitalConfig(Ecmp<T> cmp, unsigned n) {
 	atom<T> at(cmp.Z);
 	for(unsigned i=0;i<n;i++) {
 		const orbital<T> orb=at.populate(cmp.c);
-		if(orb==orbital<T>(-1,-1,false,0)) {
+		if(orb==orbital<T>(-1,-1,0,false)) {
 			printf("Electron %u was rejected\n",i);
 			break;
 		}
@@ -63,10 +63,16 @@ template<typename T> void orbitalConfig(Ecmp<T> cmp, unsigned n) {
 			printf(printDelt<T>,orb.n-o2.n,orb.l-o2.l,(orb.s?1:0)-(o2.s?1:0),orb.m_l-o2.m_l,E-E2);
 		}
 	}
+	const std::set<orbital<T>> valence=at.valenceOrbitals();
+	printf("Valence electrons:\n");
+	for(auto i=valence.cbegin();i!=valence.cend();i++) {
+		T e=at.E_i(cmp.c,*i);
+		printf(printRep<T>,i->n,i->l,(i->s?"1/2":"-1/2"),i->m_l,e);
+	}
 }
 
 template<typename T> void calcEnergy(Ecmp<T> cmp, unsigned n) {
-	orbital<T> orb(n,0,false,0);
+	orbital<T> orb(n,0,0,false);
 	for(unsigned i=0;orb.n==n;orb++,i++) {
 		printf("%u\t",i);
 		printf(printRep<T>,orb.n,orb.l,orb.s?"1/2":"-1/2",orb.m_l,orb.E(cmp.c,cmp.Z,0));
