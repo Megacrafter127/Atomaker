@@ -65,9 +65,9 @@ template<typename T> void orbitalConfig(Ecmp<T> cmp, unsigned n) {
 	}
 	const std::set<orbital<T>> valence=at.valenceOrbitals();
 	printf("Valence electrons:\n");
-	for(auto i=valence.cbegin();i!=valence.cend();i++) {
-		T e=at.E_i(cmp.c,*i);
-		printf(printRep<T>,i->n,i->l,(i->s?"1/2":"-1/2"),i->m_l,e);
+	for(auto &&orb:valence) {
+		T e=at.E_i(cmp.c,orb);
+		printf(printRep<T>,orb.n,orb.l,(orb.s?"1/2":"-1/2"),orb.m_l,e);
 	}
 }
 
